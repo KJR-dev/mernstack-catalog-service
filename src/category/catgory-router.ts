@@ -1,6 +1,10 @@
 import express from "express";
 import { CategoryController } from "./category-controller";
-import categoryValidator from "./category-validator";
+import {
+    createCategoryValidator,
+    idParamValidator,
+    updateCategoryValidator,
+} from "./category-validator";
 import { CategoryService } from "./category-service";
 import logger from "../config/logger";
 import { asyncWrapper } from "../common/utils/wrapper";
@@ -16,8 +20,39 @@ categoryRouter.post(
     "/",
     authenticate,
     canAccess([Roles.ADMIN]),
-    categoryValidator,
+    createCategoryValidator,
     asyncWrapper(categoryController.create),
+);
+
+categoryRouter.get(
+    "/:id",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    idParamValidator,
+    asyncWrapper(categoryController.getOne),
+);
+
+categoryRouter.get(
+    "/",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    asyncWrapper(categoryController.get),
+);
+
+categoryRouter.put(
+    "/:id",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    updateCategoryValidator,
+    asyncWrapper(categoryController.update),
+);
+
+categoryRouter.delete(
+    "/:id",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    idParamValidator,
+    asyncWrapper(categoryController.destroy),
 );
 
 export default categoryRouter;
