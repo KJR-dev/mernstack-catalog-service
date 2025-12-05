@@ -1,68 +1,53 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const attributesValueSchema = new mongoose.Schema({
-    name: {
-        type: String,
-    },
-    value: {
-        type: mongoose.Schema.Types.Mixed,
-    },
-});
-
-const priceConfigurationSchema = new mongoose.Schema({
-    priceType: {
-        type: String,
-        enum: ["base", "additional"],
-    },
-    availableOptions: {
-        type: Map,
-        is: Number,
-    },
-});
-
-const productSchema = new mongoose.Schema(
+const priceConfigItemSchema = new Schema(
     {
-        name: {
+        priceType: {
             type: String,
+            enum: ["base", "additional"], // VALIDATION
             required: true,
         },
+        availableOptions: {
+            type: Map,
+            of: Number,
+            required: true,
+        },
+    },
+    { _id: false },
+);
 
-        description: {
-            type: String,
-            required: true,
-        },
+const productSchema = new Schema(
+    {
+        name: { type: String, required: true, trim: true },
 
-        image: {
-            type: String,
-            required: true,
-        },
+        description: { type: String, trim: true },
+
+        image: { type: String, required: true },
 
         priceConfiguration: {
-            type: Map,
-            is: priceConfigurationSchema,
-        },
-
-        attributes: [attributesValueSchema],
-
-        tenantId: {
-            type: String,
+            type: Map, // dynamic keys (Size, Crust etc.)
+            of: priceConfigItemSchema, // strict validation for each entry
             required: true,
         },
 
+        attributes: [
+            {
+                name: { type: String, required: true },
+                value: { type: Schema.Types.Mixed, required: true },
+            },
+        ],
+
+        tenantId: { type: Number, required: true },
+
         categoryId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Category ",
+            type: Schema.Types.ObjectId,
+            ref: "Category",
+            required: true,
         },
 
-        isPublish: {
-            type: Boolean,
-            required: false,
-            default: false,
-        },
+        isPublish: { type: Boolean, default: false },
     },
-    {
-        timestamps: true,
-    },
+    { timestamps: true },
 );
 
 export default mongoose.model("Product", productSchema);
