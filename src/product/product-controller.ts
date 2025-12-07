@@ -3,13 +3,14 @@ import { Request } from "express-jwt";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { ProductService } from "./product-service";
-import { Product } from "./product-types";
+import { Filter, Product } from "./product-types";
 import { FileStorage } from "../common/types/storage";
 import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
 import { Logger } from "winston";
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
+import mongoose from "mongoose";
 
 export class ProductController {
     constructor(
@@ -120,5 +121,43 @@ export class ProductController {
 
         await this.productService.update(productId, productToUpdate);
         res.json({ id: productId });
+    };
+    getAll = async (req: Request, res: Response) => {
+        const { query, tenantId, categoryId, isPublish } = req.query;
+
+        const filters: Filter = {};
+
+        if (isPublish == "true") {
+            filters.isPublish = true;
+        }
+
+        if (tenantId) {
+            filters.tenantId = tenantId as string;
+        }
+
+        if (
+            categoryId &&
+            mongoose.Types.ObjectId.isValid(categoryId as string)
+        ) {
+            filters.categoryId = new mongoose.Types.ObjectId(
+                categoryId as string,
+            );
+        }
+
+        this.logger.info("Fetching products", {
+            query,
+            filters,
+            requestedBy: req.auth?.sub || "unknown",
+        });
+
+        const products = await this.productService.getProducts(
+            query as string,
+            filters,
+        );
+        this.logger.info("Products fetched successfully", {
+            count: products.length,
+            filtersApplied: filters,
+        });
+        res.json(products);
     };
 }

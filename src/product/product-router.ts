@@ -52,4 +52,11 @@ productRouter.put(
     asyncWrapper(productController.update),
 );
 
+productRouter.get(
+    "/",
+    authenticate,
+    canAccess([Roles.ADMIN, Roles.MANAGER]),
+    asyncWrapper(productController.getAll),
+);
+
 export default productRouter;
