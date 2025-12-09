@@ -160,10 +160,24 @@ export class ProductController {
                     : 10,
             },
         );
+
+        const finalProduct = (products.data as Product[]).map(
+            (product: Product) => {
+                return {
+                    ...product,
+                    image: this.storage.getObjectUrl(product.image),
+                };
+            },
+        );
         this.logger.info("Products fetched successfully", {
             count: products.length,
             filtersApplied: filters,
         });
-        res.json(products);
+        res.json({
+            data: finalProduct,
+            total: products.length,
+            pageSize: products.limit,
+            currentPage: products.page,
+        });
     };
 }
