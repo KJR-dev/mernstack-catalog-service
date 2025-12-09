@@ -21,7 +21,7 @@ export class ProductService {
         )) as Product;
     }
 
-    async getProduct(productId: string): Promise<Product | null> {
+    async get(productId: string): Promise<Product | null> {
         return await productModel.findOne({ _id: productId });
     }
 
@@ -67,5 +67,9 @@ export class ProductService {
         });
         // const result = await aggregate.exec();
         // return result as Product[];
+    }
+
+    async destroy(productId: string): Promise<Product | null> {
+        return await productModel.findByIdAndDelete(productId);
     }
 }

@@ -5,7 +5,7 @@ import logger from "../config/logger";
 import authenticate from "../common/middlewares/authenticate";
 import { canAccess } from "../common/middlewares/canAccess";
 import { Roles } from "../common/constants";
-import { createProductValidator } from "./product-validator";
+import { createProductValidator, idParamValidator } from "./product-validator";
 import { ProductService } from "./product-service";
 import fileUpload from "express-fileupload";
 import { S3Storage } from "../common/services/S3Storage";
@@ -52,11 +52,20 @@ productRouter.put(
     asyncWrapper(productController.update),
 );
 
+productRouter.get("/", asyncWrapper(productController.getAll));
+
 productRouter.get(
-    "/",
+    "/:productId",
+    idParamValidator,
+    asyncWrapper(productController.get),
+);
+
+productRouter.delete(
+    "/:productId",
     authenticate,
     canAccess([Roles.ADMIN, Roles.MANAGER]),
-    asyncWrapper(productController.getAll),
+    idParamValidator,
+    asyncWrapper(productController.destroy),
 );
 
 export default productRouter;

@@ -68,7 +68,7 @@ export class ProductController {
             return next(createHttpError(400, "Product ID is required"));
         }
 
-        const product = await this.productService.getProduct(productId);
+        const product = await this.productService.get(productId);
         if (!product) {
             return next(createHttpError(404, "Product not found"));
         }
@@ -127,7 +127,7 @@ export class ProductController {
 
         const filters: Filter = {};
 
-        if (isPublish == "true") {
+        if (isPublish === "true") {
             filters.isPublish = true;
         }
 
@@ -179,5 +179,37 @@ export class ProductController {
             pageSize: products.limit,
             currentPage: products.page,
         });
+    };
+    get = async (req: Request, res: Response, next: NextFunction) => {
+        const result = validationResult(req);
+        if (!result.isEmpty()) {
+            return next(createHttpError(400, result.array()[0].msg as string));
+        }
+        const { productId } = req.params;
+
+        const product = await this.productService.get(productId);
+        if (!product) {
+            return next(createHttpError(404, "Product not found"));
+        }
+        product.image = this.storage.getObjectUrl(product?.image);
+
+        res.json(product);
+    };
+
+    destroy = async (req: Request, res: Response, next: NextFunction) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return next(createHttpError(400, errors.array()[0].msg as string));
+        }
+        const { productId } = req.params;
+
+        const product = await this.productService.destroy(productId);
+
+        if (!product) {
+            return next(createHttpError(404, "Product not found"));
+        }
+        await this.storage.delete(product?.image);
+
+        res.status(204);
     };
 }
