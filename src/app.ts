@@ -13,9 +13,9 @@ app.get("/", (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello from catalog service!" });
 });
 
-app.use("/categories", categoryRouter);
-app.use("/products", productRouter);
-app.use("/topping", toppingRouter);
+app.use("/api/v1/catalog/categories", categoryRouter);
+app.use("/api/v1/catalog/products", productRouter);
+app.use("/api/v1/catalog/topping", toppingRouter);
 app.use(globalErrorHandler);
 
 export default app;
