@@ -161,7 +161,7 @@ export class ProductController {
             },
         );
 
-        const finalProduct = (products.data as Product[]).map(
+        const finalProducts = (products.data as Product[]).map(
             (product: Product) => {
                 return {
                     ...product,
@@ -174,8 +174,8 @@ export class ProductController {
             filtersApplied: filters,
         });
         res.json({
-            data: finalProduct,
-            total: products.length,
+            data: finalProducts,
+            total: products.total,
             pageSize: products.limit,
             currentPage: products.page,
         });

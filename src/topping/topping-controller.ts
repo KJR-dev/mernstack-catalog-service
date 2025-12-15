@@ -14,6 +14,7 @@ export class ToppingController {
         private storage: FileStorage,
         private logger: Logger,
     ) {}
+
     create = async (
         req: Request<object, object, IToppingCreateRequest>,
         res: Response,
@@ -115,6 +116,7 @@ export class ToppingController {
 
         res.json(updateTopping);
     };
+
     destroy = async (req: Request, res: Response, next: NextFunction) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

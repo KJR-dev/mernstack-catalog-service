@@ -39,7 +39,7 @@ const productSchema = new Schema(
             },
         ],
 
-        tenantId: { type: Number, required: true },
+        tenantId: { type: String, required: true },
 
         categoryId: {
             type: Schema.Types.ObjectId,
