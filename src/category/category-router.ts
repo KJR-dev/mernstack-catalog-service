@@ -35,7 +35,7 @@ categoryRouter.get(
 categoryRouter.get(
     "/",
     authenticate,
-    canAccess([Roles.ADMIN]),
+    canAccess([Roles.ADMIN, Roles.MANAGER]),
     asyncWrapper(categoryController.get),
 );
 
