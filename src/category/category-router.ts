@@ -32,12 +32,7 @@ categoryRouter.get(
     asyncWrapper(categoryController.getOne),
 );
 
-categoryRouter.get(
-    "/",
-    authenticate,
-    canAccess([Roles.ADMIN, Roles.MANAGER]),
-    asyncWrapper(categoryController.get),
-);
+categoryRouter.get("/", asyncWrapper(categoryController.get));
 
 categoryRouter.put(
     "/:id",
