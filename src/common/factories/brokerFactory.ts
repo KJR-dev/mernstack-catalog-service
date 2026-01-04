@@ -7,10 +7,9 @@ let messageProducer: MessageProducerBroker | null = null;
 export const createMessageProducerBroker = (): MessageProducerBroker => {
     // Making singleton
     if (!messageProducer) {
-        messageProducer = new KafkaProducerBroker(
-            "catalog-service",
+        messageProducer = new KafkaProducerBroker("catalog-service", [
             config.get("kafka.broker"),
-        );
+        ]);
     }
     return messageProducer;
 };
