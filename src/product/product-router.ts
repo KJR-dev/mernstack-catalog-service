@@ -1,23 +1,26 @@
 import { Router } from "express";
-import { asyncWrapper } from "../common/utils/wrapper";
-import { ProductController } from "./product-controller";
-import logger from "../config/logger";
+import fileUpload from "express-fileupload";
+import createHttpError from "http-errors";
+import { Roles } from "../common/constants";
+import { createMessageProducerBroker } from "../common/factories/brokerFactory";
 import authenticate from "../common/middlewares/authenticate";
 import { canAccess } from "../common/middlewares/canAccess";
-import { Roles } from "../common/constants";
-import { createProductValidator, idParamValidator } from "./product-validator";
-import { ProductService } from "./product-service";
-import fileUpload from "express-fileupload";
 import { S3Storage } from "../common/services/S3Storage";
-import createHttpError from "http-errors";
+import { asyncWrapper } from "../common/utils/wrapper";
+import logger from "../config/logger";
+import { ProductController } from "./product-controller";
+import { ProductService } from "./product-service";
+import { createProductValidator, idParamValidator } from "./product-validator";
 
 const productRouter = Router();
 
 const productService = new ProductService();
 const s3Storage = new S3Storage();
+const broker = createMessageProducerBroker();
 const productController = new ProductController(
     productService,
     s3Storage,
+    broker,
     logger,
 );
 

@@ -1,21 +1,24 @@
 import { NextFunction, Response } from "express";
+import { UploadedFile } from "express-fileupload";
 import { Request } from "express-jwt";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
+import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
+import { Logger } from "winston";
+import { Roles } from "../common/constants";
+import { AuthRequest } from "../common/types";
+import { MessageProducerBroker } from "../common/types/broker";
+import { FileStorage } from "../common/types/storage";
+import { KAFKA_TOPICS } from "../config/constants";
 import { ProductService } from "./product-service";
 import { Filter, Product } from "./product-types";
-import { FileStorage } from "../common/types/storage";
-import { v4 as uuidv4 } from "uuid";
-import { UploadedFile } from "express-fileupload";
-import { Logger } from "winston";
-import { AuthRequest } from "../common/types";
-import { Roles } from "../common/constants";
-import mongoose from "mongoose";
 
 export class ProductController {
     constructor(
         private productService: ProductService,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
         private logger: Logger,
     ) {}
 
@@ -55,6 +58,15 @@ export class ProductController {
         // todo: add proper request body types
         const newProduct = await this.productService.create(
             product as unknown as Product,
+        );
+
+        // send product to kafka
+        await this.broker.sendMessage(
+            KAFKA_TOPICS.PRODUCT,
+            JSON.stringify({
+                id: newProduct._id,
+                priceConfiguration: newProduct.priceConfiguration,
+            }),
         );
         res.json({ id: newProduct._id });
     };
@@ -119,7 +131,19 @@ export class ProductController {
             image: imageName ? imageName : (oldImage as string),
         };
 
-        await this.productService.update(productId, productToUpdate);
+        const updatedProduct = await this.productService.update(
+            productId,
+            productToUpdate,
+        );
+
+        // send product to kafka
+        await this.broker.sendMessage(
+            KAFKA_TOPICS.PRODUCT,
+            JSON.stringify({
+                id: updatedProduct._id,
+                priceConfiguration: updatedProduct.priceConfiguration,
+            }),
+        );
         res.json({ id: productId });
     };
     getAll = async (req: Request, res: Response) => {
@@ -195,7 +219,6 @@ export class ProductController {
 
         res.json(product);
     };
-
     destroy = async (req: Request, res: Response, next: NextFunction) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
