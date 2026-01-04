@@ -1,5 +1,5 @@
 export const KAFKA_TOPICS = {
     PRODUCT: "product",
-    // future:
+    TOPPING: "topping",
     // ORDER: "order",
 } as const;

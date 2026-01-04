@@ -15,14 +15,17 @@ import createHttpError from "http-errors";
 import { S3Storage } from "../common/services/S3Storage";
 import logger from "../config/logger";
 import { ToppingService } from "./topping-service";
+import { createMessageProducerBroker } from "../common/factories/brokerFactory";
 
 const toppingRouter = express.Router();
 
 const s3Storage = new S3Storage();
 const toppingService = new ToppingService();
+const broker = createMessageProducerBroker();
 const toppingController = new ToppingController(
     toppingService,
     s3Storage,
+    broker,
     logger,
 );
 

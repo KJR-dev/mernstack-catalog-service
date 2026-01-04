@@ -1,17 +1,20 @@
 import { NextFunction, Request, Response } from "express";
-import { IToppingCreateRequest } from "./topping-types";
+import { UploadedFile } from "express-fileupload";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { v4 as uuidv4 } from "uuid";
-import { UploadedFile } from "express-fileupload";
-import { FileStorage } from "../common/types/storage";
 import { Logger } from "winston";
+import { MessageProducerBroker } from "../common/types/broker";
+import { FileStorage } from "../common/types/storage";
+import { KAFKA_TOPICS } from "../config/constants";
 import { ToppingService } from "./topping-service";
+import { IToppingCreateRequest } from "./topping-types";
 
 export class ToppingController {
     constructor(
         private toppingService: ToppingService,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
         private logger: Logger,
     ) {}
 
@@ -42,6 +45,10 @@ export class ToppingController {
         };
 
         const newTopping = await this.toppingService.create(topping);
+        await this.broker.sendMessage(
+            KAFKA_TOPICS.TOPPING,
+            JSON.stringify({ id: newTopping._id, price: newTopping.price }),
+        );
         res.json(newTopping);
     };
 
@@ -113,7 +120,13 @@ export class ToppingController {
             toppingId,
             toppingToUpdate,
         );
-
+        await this.broker.sendMessage(
+            KAFKA_TOPICS.TOPPING,
+            JSON.stringify({
+                id: updateTopping?._id,
+                price: updateTopping?.price,
+            }),
+        );
         res.json(updateTopping);
     };
 
