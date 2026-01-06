@@ -11,6 +11,7 @@ import { AuthRequest } from "../common/types";
 import { MessageProducerBroker } from "../common/types/broker";
 import { FileStorage } from "../common/types/storage";
 import { KAFKA_TOPICS } from "../config/constants";
+import { mapToObject } from "../utils";
 import { ProductService } from "./product-service";
 import { Filter, Product } from "./product-types";
 
@@ -65,7 +66,12 @@ export class ProductController {
             KAFKA_TOPICS.PRODUCT,
             JSON.stringify({
                 id: newProduct._id,
-                priceConfiguration: newProduct.priceConfiguration,
+                priceConfiguration: mapToObject(
+                    newProduct.priceConfiguration as unknown as Map<
+                        string,
+                        unknown
+                    >,
+                ),
             }),
         );
         res.json({ id: newProduct._id });
@@ -141,7 +147,12 @@ export class ProductController {
             KAFKA_TOPICS.PRODUCT,
             JSON.stringify({
                 id: updatedProduct._id,
-                priceConfiguration: updatedProduct.priceConfiguration,
+                priceConfiguration: mapToObject(
+                    updatedProduct.priceConfiguration as unknown as Map<
+                        string,
+                        unknown
+                    >,
+                ),
             }),
         );
         res.json({ id: productId });
