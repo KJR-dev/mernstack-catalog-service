@@ -8,7 +8,7 @@ import { MessageProducerBroker } from "../common/types/broker";
 import { FileStorage } from "../common/types/storage";
 import { KAFKA_TOPICS } from "../config/constants";
 import { ToppingService } from "./topping-service";
-import { IToppingCreateRequest } from "./topping-types";
+import { IToppingCreateRequest, ToppingEvents } from "./topping-types";
 
 export class ToppingController {
     constructor(
@@ -45,9 +45,17 @@ export class ToppingController {
         };
 
         const newTopping = await this.toppingService.create(topping);
+
         await this.broker.sendMessage(
             KAFKA_TOPICS.TOPPING,
-            JSON.stringify({ id: newTopping._id, price: newTopping.price }),
+            JSON.stringify({
+                event_type: ToppingEvents.TOPPING_CREATE,
+                data: {
+                    id: newTopping._id,
+                    price: newTopping.price,
+                    tenantId: newTopping.tenantId,
+                },
+            }),
         );
         res.json(newTopping);
     };
@@ -120,11 +128,20 @@ export class ToppingController {
             toppingId,
             toppingToUpdate,
         );
+
+        if (!updateTopping) {
+            return next(createHttpError(400, "Topping not exist"));
+        }
+
         await this.broker.sendMessage(
             KAFKA_TOPICS.TOPPING,
             JSON.stringify({
-                id: updateTopping?._id,
-                price: updateTopping?.price,
+                event_type: ToppingEvents.TOPPING_UPDATE,
+                data: {
+                    id: updateTopping._id,
+                    price: updateTopping.price,
+                    tenantId: updateTopping.tenantId,
+                },
             }),
         );
         res.json(updateTopping);
@@ -142,6 +159,18 @@ export class ToppingController {
         if (!deleted) {
             return next(createHttpError(404, "Topping not found"));
         }
+
+        await this.broker.sendMessage(
+            KAFKA_TOPICS.TOPPING,
+            JSON.stringify({
+                event_type: ToppingEvents.TOPPING_DELETE,
+                data: {
+                    id: deleted._id,
+                    price: deleted.price,
+                    tenantId: deleted.tenantId,
+                },
+            }),
+        );
 
         res.json({
             success: true,

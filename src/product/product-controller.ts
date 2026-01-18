@@ -13,7 +13,7 @@ import { FileStorage } from "../common/types/storage";
 import { KAFKA_TOPICS } from "../config/constants";
 import { mapToObject } from "../utils";
 import { ProductService } from "./product-service";
-import { Filter, Product } from "./product-types";
+import { Filter, Product, ProductEvents } from "./product-types";
 
 export class ProductController {
     constructor(
@@ -65,13 +65,16 @@ export class ProductController {
         await this.broker.sendMessage(
             KAFKA_TOPICS.PRODUCT,
             JSON.stringify({
-                id: newProduct._id,
-                priceConfiguration: mapToObject(
-                    newProduct.priceConfiguration as unknown as Map<
-                        string,
-                        unknown
-                    >,
-                ),
+                event_type: ProductEvents.PRODUCT_CREATE,
+                data: {
+                    id: newProduct._id,
+                    priceConfiguration: mapToObject(
+                        newProduct.priceConfiguration as unknown as Map<
+                            string,
+                            unknown
+                        >,
+                    ),
+                },
             }),
         );
         res.json({ id: newProduct._id });
@@ -146,13 +149,16 @@ export class ProductController {
         await this.broker.sendMessage(
             KAFKA_TOPICS.PRODUCT,
             JSON.stringify({
-                id: updatedProduct._id,
-                priceConfiguration: mapToObject(
-                    updatedProduct.priceConfiguration as unknown as Map<
-                        string,
-                        unknown
-                    >,
-                ),
+                event_type: ProductEvents.PRODUCT_UPDATE,
+                data: {
+                    id: updatedProduct._id,
+                    priceConfiguration: mapToObject(
+                        updatedProduct.priceConfiguration as unknown as Map<
+                            string,
+                            unknown
+                        >,
+                    ),
+                },
             }),
         );
         res.json({ id: productId });
@@ -242,7 +248,24 @@ export class ProductController {
         if (!product) {
             return next(createHttpError(404, "Product not found"));
         }
+
         await this.storage.delete(product?.image);
+
+        await this.broker.sendMessage(
+            KAFKA_TOPICS.PRODUCT,
+            JSON.stringify({
+                event_type: ProductEvents.PRODUCT_DELETE,
+                data: {
+                    id: product._id,
+                    priceConfiguration: mapToObject(
+                        product.priceConfiguration as unknown as Map<
+                            string,
+                            unknown
+                        >,
+                    ),
+                },
+            }),
+        );
 
         res.status(204);
     };
