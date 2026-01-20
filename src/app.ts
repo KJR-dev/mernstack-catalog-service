@@ -1,11 +1,22 @@
-import express, { Request, Response } from "express";
-import { globalErrorHandler } from "./common/middlewares/globalErrorHandler";
-import categoryRouter from "./category/category-router";
+import config from "config";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import express, { Request, Response } from "express";
+import categoryRouter from "./category/category-router";
+import { globalErrorHandler } from "./common/middlewares/globalErrorHandler";
 import productRouter from "./product/product-router";
 import toppingRouter from "./topping/topping-router";
 
 const app = express();
+const ALLOWED_DOMAINS = [
+    config.get("frontend.clientUI"),
+    config.get("frontend.adminUI"),
+];
+app.use(
+    cors({
+        origin: ALLOWED_DOMAINS as string[],
+    }),
+);
 app.use(express.json());
 app.use(cookieParser());
 
